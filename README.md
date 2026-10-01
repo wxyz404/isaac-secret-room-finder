@@ -1,6 +1,6 @@
 # The Binding of Isaac — Secret Room Finder
 
-A small, dependency-free Java Swing prototype for mapping a completed floor and ranking likely locations for a Secret Room, Super Secret Room, or Ultra Secret Room for the video game _The Binding of Isaac: Rebirth_ (and DLCs).
+A small, dependency-free Java Swing prototype for mapping a completed floor and ranking likely locations for a Secret Room, Super Secret Room, or Ultra Secret Room for the video game _The Binding of Isaac: Rebirth_ (and DLCs up to _Repentance+_).
 
 > This is an unofficial fan-made tool and is not affiliated with or endorsed by Nicalis, Inc. or *The Binding of Isaac*.
 
@@ -27,7 +27,7 @@ The editor represents the full 13 × 13 floor boundary. Choose a palette entry, 
 - **Normal room** — an ordinary completed-map room.
 - **Boss Room** — enables Boss-proximity scoring for Super Secret Rooms.
 - **Shop** — enables Shop-proximity scoring for Super Secret Rooms.
-- **Blocked** — a position that cannot contain a room.
+- **Blocked** — a position that cannot contain a room of any type.
 
 ## Ranking rules
 
