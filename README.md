@@ -48,3 +48,4 @@ mvn test
 ```
 
 GitHub Actions runs the same command on Java 21 for pushes and pull requests.
+
