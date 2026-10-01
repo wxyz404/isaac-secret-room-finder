@@ -1,6 +1,6 @@
 # The Binding of Isaac — Secret Room Finder
 
-A small, dependency-free Java Swing prototype for mapping a completed floor and ranking likely locations for a Secret Room, Super Secret Room, or Ultra Secret Room.
+A small, dependency-free Java Swing prototype for mapping a completed floor and ranking likely locations for a Secret Room, Super Secret Room, or Ultra Secret Room for the video game _The Binding of Isaac: Rebirth_ (and DLCs).
 
 > This is an unofficial fan-made tool and is not affiliated with or endorsed by Nicalis, Inc. or *The Binding of Isaac*.
 
