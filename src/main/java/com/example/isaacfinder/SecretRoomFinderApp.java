@@ -108,6 +108,12 @@ public final class SecretRoomFinderApp {
                 int finalColumn = column;
                 JButton cell = new JButton();
                 cell.setFocusable(false);
+                cell.setFocusPainted(false);
+                // Some Windows button themes ignore custom fills unless the
+                // content area is explicitly painted and opaque.
+                cell.setContentAreaFilled(true);
+                cell.setOpaque(true);
+                cell.setBorderPainted(true);
                 cell.setMargin(new java.awt.Insets(0, 0, 0, 0));
                 cell.addActionListener(event -> {
                     floorMap.paint(finalColumn, finalRow, paintState);
