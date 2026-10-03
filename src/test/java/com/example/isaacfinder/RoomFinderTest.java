@@ -32,6 +32,17 @@ class RoomFinderTest {
     }
 
     @Test
+    void secretAndSuperSecretRoomsCannotBeNextToABossRoom() {
+        SecretRoomFinderApp.FloorMap map = new SecretRoomFinderApp.FloorMap(13, 13);
+        map.paint(5, 4, SecretRoomFinderApp.CellState.BOSS);
+        map.paint(5, 3, SecretRoomFinderApp.CellState.ROOM);
+        map.paint(4, 5, SecretRoomFinderApp.CellState.ROOM);
+
+        assertFalse(hasCandidate(find(map, SecretRoomFinderApp.TargetRoom.SECRET), 5, 5));
+        assertFalse(hasCandidate(find(map, SecretRoomFinderApp.TargetRoom.SUPER_SECRET), 5, 5));
+    }
+
+    @Test
     void superSecretCandidatesNearBossAndShopScoreHigher() {
         SecretRoomFinderApp.FloorMap map = new SecretRoomFinderApp.FloorMap(13, 13);
         map.paint(5, 4, SecretRoomFinderApp.CellState.ROOM);
@@ -63,10 +74,26 @@ class RoomFinderTest {
     }
 
     @Test
-    void ultraSecretRoomNeedsAOneRoomExpansionSlot() {
+    void ultraSecretRoomCannotDirectlyTouchANormalRoom() {
         SecretRoomFinderApp.FloorMap map = new SecretRoomFinderApp.FloorMap(13, 13);
         map.paint(5, 4, SecretRoomFinderApp.CellState.ROOM);
-        assertTrue(hasCandidate(find(map, SecretRoomFinderApp.TargetRoom.ULTRA_SECRET), 5, 5));
+        assertFalse(hasCandidate(find(map, SecretRoomFinderApp.TargetRoom.ULTRA_SECRET), 5, 5));
+    }
+
+    @Test
+    void ultraSecretRoomRanksThreeRedRoomConnectionsAboveLowerTiers() {
+        SecretRoomFinderApp.FloorMap map = new SecretRoomFinderApp.FloorMap(13, 13);
+        // Each normal room is two steps away, leaving one empty Red Room bridge square.
+        map.paint(5, 3, SecretRoomFinderApp.CellState.ROOM);
+        map.paint(3, 5, SecretRoomFinderApp.CellState.ROOM);
+        map.paint(5, 7, SecretRoomFinderApp.CellState.SHOP);
+
+        SecretRoomFinderApp.Candidate candidate = candidateAt(
+                find(map, SecretRoomFinderApp.TargetRoom.ULTRA_SECRET), 5, 5);
+
+        assertTrue(candidate.reason().contains("3 non-red room(s)"));
+        assertTrue(candidate.reason().contains("3+ connection tier"));
+        assertTrue(candidate.score() >= 13_225);
     }
 
     private static List<SecretRoomFinderApp.Candidate> find(SecretRoomFinderApp.FloorMap map, SecretRoomFinderApp.TargetRoom target) {
