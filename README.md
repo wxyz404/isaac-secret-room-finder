@@ -33,9 +33,11 @@ The editor represents the full 13 × 13 floor boundary. Choose a palette entry, 
 
 This is a transparent heuristic, not a reimplementation of the game’s seed or RNG.
 
-- **Secret Room:** an empty cell touching at least two rooms. More touching rooms rank higher.
-- **Super Secret Room:** an empty cell touching exactly one room, preserving the expected dead-end-like shape. It receives additional score bonuses for being close to the Boss Room, close to the Shop, and near the shortest Boss–Shop path.
-- **Ultra Secret Room:** an empty cell touching exactly one room with at least two open sides, representing a plausible Red Key-style expansion slot.
+- **Secret Room:** an empty cell touching at least two rooms. More touching rooms rank higher. Candidates directly adjacent to the Boss Room are excluded.
+- **Super Secret Room:** an empty cell touching exactly one room, preserving the expected dead-end-like shape. Candidates directly adjacent to the Boss Room are excluded; remaining candidates receive score bonuses for proximity to the Boss Room, proximity to the Shop, and lying near the shortest Boss–Shop path.
+- **Ultra Secret Room:** an empty cell that does not directly touch a normal-map room. Each adjacent empty cell is treated as a possible Red Room bridge, and the finder counts distinct non-red rooms reachable through those bridges. Three or more connected rooms receive the highest tier, 11.5× the weight of a two-room location; two-room locations receive 11.5× the weight of a one-room location.
+
+The map represents every room as one tile. Painting multiple tiles for an L-shaped room lets its separate map squares contribute separately to an Ultra Secret Room connection count.
 
 Every result includes its score and the evidence used to calculate it, making the behavior straightforward to inspect and tune.
 
