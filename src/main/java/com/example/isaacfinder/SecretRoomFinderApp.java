@@ -23,7 +23,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A deliberately small, dependency-free prototype.
@@ -300,8 +302,9 @@ public final class SecretRoomFinderApp {
                         continue;
                     }
                     int adjacentRooms = adjacentRooms(map, column, row);
+                    int adjacentBossRooms = adjacentRoomsOfType(map, column, row, CellState.BOSS);
                     int openSides = openSides(map, column, row);
-                    Candidate candidate = evaluate(map, target, column, row, adjacentRooms, openSides);
+                    Candidate candidate = evaluate(map, target, column, row, adjacentRooms, adjacentBossRooms, openSides);
                     if (candidate != null) {
                         results.add(candidate);
                     }
@@ -312,17 +315,18 @@ public final class SecretRoomFinderApp {
             return results;
         }
 
-        private static Candidate evaluate(FloorMap map, TargetRoom target, int column, int row, int adjacentRooms, int openSides) {
+        private static Candidate evaluate(FloorMap map, TargetRoom target, int column, int row,
+                                          int adjacentRooms, int adjacentBossRooms, int openSides) {
             return switch (target) {
-                case SECRET -> adjacentRooms >= 2
+                // The Boss Room has one normal-room entrance. Secret variants cannot occupy its other sides.
+                case SECRET -> adjacentBossRooms == 0 && adjacentRooms >= 2
                         ? new Candidate(column, row, adjacentRooms * 10 + openSides,
                         "touches " + adjacentRooms + " rooms; " + openSides + " open side(s)")
                         : null;
-                case SUPER_SECRET -> superSecretCandidate(map, column, row, adjacentRooms, openSides);
-                case ULTRA_SECRET -> adjacentRooms == 1 && openSides >= 2
-                        ? new Candidate(column, row, 20 + openSides,
-                        "single-room Red Key-style expansion slot with " + openSides + " open sides")
+                case SUPER_SECRET -> adjacentBossRooms == 0
+                        ? superSecretCandidate(map, column, row, adjacentRooms, openSides)
                         : null;
+                case ULTRA_SECRET -> ultraSecretCandidate(map, column, row, adjacentRooms);
             };
         }
 
@@ -353,6 +357,57 @@ public final class SecretRoomFinderApp {
             return new Candidate(column, row, score, reason);
         }
 
+        /**
+         * An Ultra Secret Room is not directly connected to a normal room.
+         * Instead, each empty adjacent cell is treated as a possible Red Room
+         * bridge. We count the distinct non-red map tiles reachable through
+         * those bridges; separate painted cells also represent separate parts
+         * of an L-shaped room.
+         */
+        private static Candidate ultraSecretCandidate(FloorMap map, int column, int row, int adjacentRooms) {
+            if (adjacentRooms != 0) return null;
+
+            Set<String> connectedRooms = new HashSet<>();
+            for (int[] direction : DIRECTIONS) {
+                int bridgeColumn = column + direction[0];
+                int bridgeRow = row + direction[1];
+                if (!inside(map, bridgeColumn, bridgeRow) || map.at(bridgeColumn, bridgeRow) != CellState.EMPTY) {
+                    continue;
+                }
+                addRoomsBeyondBridge(map, column, row, bridgeColumn, bridgeRow, connectedRooms);
+            }
+
+            int connections = connectedRooms.size();
+            if (connections == 0) return null;
+
+            int likelihoodWeight;
+            String tier;
+            if (connections >= 3) {
+                likelihoodWeight = 13_225;
+                tier = "3+ connection tier (11.5× a 2-room location)";
+            } else if (connections == 2) {
+                likelihoodWeight = 1_150;
+                tier = "2 connection tier (11.5× a 1-room location)";
+            } else {
+                likelihoodWeight = 100;
+                tier = "1 connection tier";
+            }
+            return new Candidate(column, row, likelihoodWeight + connections,
+                    "reached through Red Room bridge(s) from " + connections + " non-red room(s); " + tier);
+        }
+
+        private static void addRoomsBeyondBridge(FloorMap map, int ultraColumn, int ultraRow,
+                                                  int bridgeColumn, int bridgeRow, Set<String> connectedRooms) {
+            for (int[] direction : DIRECTIONS) {
+                int roomColumn = bridgeColumn + direction[0];
+                int roomRow = bridgeRow + direction[1];
+                if (roomColumn == ultraColumn && roomRow == ultraRow) continue;
+                if (inside(map, roomColumn, roomRow) && map.at(roomColumn, roomRow).isRoom()) {
+                    connectedRooms.add(roomColumn + ":" + roomRow);
+                }
+            }
+        }
+
         private static int adjacentRooms(FloorMap map, int column, int row) {
             int count = 0;
             for (int[] direction : DIRECTIONS) {
@@ -361,6 +416,16 @@ public final class SecretRoomFinderApp {
                 if (inside(map, x, y) && map.at(x, y).isRoom()) {
                     count++;
                 }
+            }
+            return count;
+        }
+
+        private static int adjacentRoomsOfType(FloorMap map, int column, int row, CellState roomType) {
+            int count = 0;
+            for (int[] direction : DIRECTIONS) {
+                int x = column + direction[0];
+                int y = row + direction[1];
+                if (inside(map, x, y) && map.at(x, y) == roomType) count++;
             }
             return count;
         }
